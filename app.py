@@ -106,7 +106,7 @@ if "page" not in st.session_state:
 if "chat_history" not in st.session_state:
     st.session_state['chat_history'] = []
 
-st.session_state['chat_history'].append({"user": "Connect me to the real person or Support team", "bot": "To reach out to the administrator of Aibytec for specific inquiries, you can submit your message through the "Contact" form on their website. Here is the link to access the contact page directly: https://api.whatsapp.com/send/?phone=923312154519&text=Hey%21+I+need+help..&type=phone_number&app_absent=0 "})
+st.session_state['chat_history'].append({"user": "Connect me to the real person or Support team", "bot": "To reach out to the administrator of Aibytec for specific inquiries, you can submit your message through the form on their website. Here is the link to access the contact page directly: https://api.whatsapp.com/send/?phone=923312154519&text=Hey%21+I+need+help..&type=phone_number&app_absent=0 "})
 # ----------------------
 # PAGE 1: User Info Form
 # ----------------------
