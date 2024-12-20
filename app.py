@@ -26,7 +26,7 @@ WEBSITE_URL = os.getenv("WEBSITE_URL")
 # Functions and Rest of the Script
 # ----------------------
 
-PDF_PATH = "./aibytec data2.pdf"
+PDF_PATH = "./aibytec data.pdf"
 
 # Function to send email
 def send_email(name, email, contact_no, area_of_interest):
@@ -77,45 +77,46 @@ def scrape_website(url):
 
 # Function to generate OpenAI response
 def chat_with_ai(user_question, website_text, pdf_text, chat_history):
-    prompt_template = """
-    You are an AI assistant designed to help with the following:
-    1. Website content: {website_content}
-    2. PDF content: {pdf_content}
+    # prompt_template = """
+    # You are an AI assistant designed to help with the following:
+    # 1. Website content: {website_content}
+    # 2. PDF content: {pdf_content}
 
-    The user may ask any question related to the above content. Answer based on the combined information from the website and PDF.
+    # The user may ask any question related to the above content. Answer based on the combined information from the website and PDF.
 
-    if the use ask for connect to the admin person or suportive team then you should provide this link as embeded form so that use will click and redirect to this link.
-    admin person: https://api.whatsapp.com/send/?phone=923312154519&text=Hey%21+I+need+help..&type=phone_number&app_absent=0”
-    --- Conversation History ---
-    {conversation_history}
+    # if the use ask for connect to the admin person or suportive team then you should provide this link as embeded form so that use will click and redirect to this link.
+    # admin person: https://api.whatsapp.com/send/?phone=923312154519&text=Hey%21+I+need+help..&type=phone_number&app_absent=0”
+    # --- Conversation History ---
+    # {conversation_history}
     
-    User's Question: {user_question}
+    # User's Question: {user_question}
 
-    Your response should be concise and informative. If the question is unclear, ask for clarification.
+    # Your response should be concise and informative. If the question is unclear, ask for clarification.
 
-    Your answer:
-    """
+    # Your answer:
+    # """
     
-    # Populate the template with dynamic data
-    conversation_history = "\n".join([f"User: {entry['user']}\nAssistant: {entry['bot']}" for entry in chat_history])
-    formatted_prompt = prompt_template.format(
-        website_content=website_text,
-        pdf_content=pdf_text,
-        conversation_history=conversation_history,
-        user_question=user_question
-    )
+    # # Populate the template with dynamic data
+    # conversation_history = "\n".join([f"User: {entry['user']}\nAssistant: {entry['bot']}" for entry in chat_history])
+    # formatted_prompt = prompt_template.format(
+    #     website_content=website_text,
+    #     pdf_content=pdf_text,
+    #     conversation_history=conversation_history,
+    #     user_question=user_question
+    # )
 
-    # combined_context = f"Website Content:\n{website_text}\n\nPDF Content:\n{pdf_text}"
-    # messages = [{"role": "system", "content": "You are a helpful assistant. Use the provided content."}]
-    # for entry in chat_history:
-    #     messages.append({"role": "user", "content": entry['user']})
-    #     messages.append({"role": "assistant", "content": entry['bot']})
-    # messages.append({"role": "user", "content": f"{combined_context}\n\nQuestion: {user_question}"})
+    combined_context = f"Website Content:\n{website_text}\n\nPDF Content:\n{pdf_text}"
+    messages = [{"role": "system", "content": "You are a helpful assistant. Use the provided content."}]
+    for entry in chat_history:
+        messages.append({"role": "user", "content": entry['user']})
+        messages.append({"role": "assistant", "content": entry['bot']})
+    messages.append({"role": "user", "content": f"{combined_context}\n\nQuestion: {user_question}"})
 
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
-            prompt=formatted_prompt,
+            # prompt=formatted_prompt,
+           messages=messages
             max_tokens=150,
             temperature=0.7,
             stream=False
