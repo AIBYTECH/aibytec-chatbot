@@ -76,13 +76,13 @@ def scrape_website(url):
         return f"Error scraping website: {e}"
 
 # Function to generate OpenAI response
-def chat_with_ai(user_question, website_text, pdf_text, chat_history):
-    combined_context = f"Website Content:\n{website_text}\n\nPDF Content:\n{pdf_text}"
+def chat_with_ai(user_question, pdf_text, chat_history):
+    # combined_context = f"Website Content:\n{website_text}\n\nPDF Content:\n{pdf_text}"
     messages = [{"role": "system", "content": "You are a helpful assistant. Use the provided content."}]
     for entry in chat_history:
         messages.append({"role": "user", "content": entry['user']})
         messages.append({"role": "assistant", "content": entry['bot']})
-    messages.append({"role": "user", "content": f"{combined_context}\n\nQuestion: {user_question}"})
+    messages.append({"role": "user", "content": f"{pdf_text}\n\nQuestion: {user_question}"})
 
     try:
         response = openai.ChatCompletion.create(
@@ -106,7 +106,6 @@ if "page" not in st.session_state:
 if "chat_history" not in st.session_state:
     st.session_state['chat_history'] = []
 
-st.session_state['chat_history'].append({"user": "Connect me to the real person or Support team", "bot": "To reach out to the administrator of Aibytec for specific inquiries, you can submit your message through the form on their website. Here is the link to access the contact page directly: https://api.whatsapp.com/send/?phone=923312154519&text=Hey%21+I+need+help..&type=phone_number&app_absent=0 "})
 # ----------------------
 # PAGE 1: User Info Form
 # ----------------------
@@ -224,7 +223,8 @@ elif st.session_state['page'] == 'chat':
     if user_input:
         # Display bot's response
         with st.spinner("Generating response..."):
-            bot_response = chat_with_ai(user_input, website_text, pdf_text, st.session_state['chat_history'])
+            # bot_response = chat_with_ai(user_input, website_text, pdf_text, st.session_state['chat_history'])
+            bot_response = chat_with_ai(user_input, pdf_text, st.session_state['chat_history'])
         
         # Append user query and bot response to chat history
         st.session_state['chat_history'].append({"user": user_input, "bot": bot_response})
