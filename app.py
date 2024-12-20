@@ -107,10 +107,10 @@ def chat_with_ai(user_question, website_text, pdf_text, chat_history):
 
     combined_context = f"Website Content:\n{website_text}\n\nPDF Content:\n{pdf_text}"
     messages = [{"role": "system", "content": "You are a helpful assistant. Use the provided content."}]
-    for entry in chat_history:
-        messages.append({"role": "user", "content": entry['user']})
-        messages.append({"role": "assistant", "content": entry['bot']})
-    messages.append({"role": "user", "content": f"{combined_context}\n\nQuestion: {user_question}"})
+    # for entry in chat_history:
+    #     messages.append({"role": "user", "content": entry['user']})
+    #     messages.append({"role": "assistant", "content": entry['bot']})
+    # messages.append({"role": "user", "content": f"{combined_context}\n\nQuestion: {user_question}"})
 
     try:
         response = openai.ChatCompletion.create(
