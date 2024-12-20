@@ -116,7 +116,7 @@ def chat_with_ai(user_question, website_text, pdf_text, chat_history):
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             # prompt=formatted_prompt,
-           messages=messages
+            messages=messages,
             max_tokens=150,
             temperature=0.7,
             stream=False
