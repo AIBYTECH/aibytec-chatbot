@@ -84,7 +84,7 @@ def chat_with_ai(user_question, website_text, pdf_text, chat_history):
 
     The user may ask any question related to the above content. Answer based on the combined information from the website and PDF.
 
-    if the use ask for connect to the admin person or suportive team then you shoul provide this link as embeded form so that use will click and redirect to this link.
+    if the use ask for connect to the admin person or suportive team then you should provide this link as embeded form so that use will click and redirect to this link.
     admin person: https://api.whatsapp.com/send/?phone=923312154519&text=Hey%21+I+need+help..&type=phone_number&app_absent=0”
     --- Conversation History ---
     {conversation_history}
@@ -105,8 +105,8 @@ def chat_with_ai(user_question, website_text, pdf_text, chat_history):
         user_question=user_question
     )
 
-    combined_context = f"Website Content:\n{website_text}\n\nPDF Content:\n{pdf_text}"
-    messages = [{"role": "system", "content": "You are a helpful assistant. Use the provided content."}]
+    # combined_context = f"Website Content:\n{website_text}\n\nPDF Content:\n{pdf_text}"
+    # messages = [{"role": "system", "content": "You are a helpful assistant. Use the provided content."}]
     # for entry in chat_history:
     #     messages.append({"role": "user", "content": entry['user']})
     #     messages.append({"role": "assistant", "content": entry['bot']})
@@ -115,7 +115,6 @@ def chat_with_ai(user_question, website_text, pdf_text, chat_history):
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
-            messages=messages,
             prompt=formatted_prompt,
             max_tokens=150,
             temperature=0.7,
