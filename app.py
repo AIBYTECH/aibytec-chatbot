@@ -77,36 +77,20 @@ def scrape_website(url):
 
 # Function to generate OpenAI response
 def chat_with_ai(user_question, website_text, pdf_text, chat_history):
-    # prompt_template = """
-    # You are an AI assistant designed to help with the following:
-    # 1. Website content: {website_content}
-    # 2. PDF content: {pdf_content}
-
-    # The user may ask any question related to the above content. Answer based on the combined information from the website and PDF.
-
-    # if the use ask for connect to the admin person or suportive team then you should provide this link as embeded form so that use will click and redirect to this link.
-    # admin person: https://api.whatsapp.com/send/?phone=923312154519&text=Hey%21+I+need+help..&type=phone_number&app_absent=0”
-    # --- Conversation History ---
-    # {conversation_history}
-    
-    # User's Question: {user_question}
-
-    # Your response should be concise and informative. If the question is unclear, ask for clarification.
-
-    # Your answer:
-    # """
-    
-    # # Populate the template with dynamic data
-    # conversation_history = "\n".join([f"User: {entry['user']}\nAssistant: {entry['bot']}" for entry in chat_history])
-    # formatted_prompt = prompt_template.format(
-    #     website_content=website_text,
-    #     pdf_content=pdf_text,
-    #     conversation_history=conversation_history,
-    #     user_question=user_question
-    # )
-
+    custom_guidelines = """
+    You are a helpful assistant of a company "Aibytec". Follow these guidelines:
+    1. Always provide concise and clear answers.
+    2. If the user asks for specific instructions or a solution, give step-by-step directions.
+    3. If the user requests help with contacting someone, provide the appropriate contact link.
+    4. If you don't have enough information to answer, politely ask for clarification.
+    5. Always respect the privacy of user information and do not share personal details.
+    6. if use ask for Connect to the suportive person or admin so you have to provide admin information and also this link in hyperlink form,
+    click here : https://api.whatsapp.com/send/?phone=923312154519&text=Hey%21+I+need+help..&type=phone_number&app_absent=0
+    """
     combined_context = f"Website Content:\n{website_text}\n\nPDF Content:\n{pdf_text}"
-    messages = [{"role": "system", "content": "You are a helpful assistant. Use the provided content."}]
+    messages = [
+        {"role": "system", "content": custom_guidelines},
+        {"role": "system", "content": "You are a helpful assistant. Use the provided content."}]
     for entry in chat_history:
         messages.append({"role": "user", "content": entry['user']})
         messages.append({"role": "assistant", "content": entry['bot']})
