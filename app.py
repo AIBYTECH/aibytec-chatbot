@@ -85,6 +85,7 @@ def chat_with_ai(user_question, website_text, pdf_text, chat_history):
     4. If you don't have enough information to answer, politely ask for clarification.
     5. Always respect the privacy of user information and do not share personal details.
     6. if use ask for Connect to the suportive person or admin so you have to provide admin information and also this link in hyperlink form,
+    here is direct whatsapp link
     click here : https://api.whatsapp.com/send/?phone=923312154519&text=Hey%21+I+need+help..&type=phone_number&app_absent=0
     """
     combined_context = f"Website Content:\n{website_text}\n\nPDF Content:\n{pdf_text}"
