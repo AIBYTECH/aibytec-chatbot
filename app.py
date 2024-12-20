@@ -76,18 +76,49 @@ def scrape_website(url):
         return f"Error scraping website: {e}"
 
 # Function to generate OpenAI response
-def chat_with_ai(user_question, pdf_text, chat_history):
-    # combined_context = f"Website Content:\n{website_text}\n\nPDF Content:\n{pdf_text}"
+def chat_with_ai(user_question, website_text, pdf_text, chat_history):
+    prompt_template = """
+    You are an AI assistant designed to help with the following:
+    1. Website content: {website_content}
+    2. PDF content: {pdf_content}
+
+    The user may ask any question related to the above content. Answer based on the combined information from the website and PDF.
+
+    if the use ask for connect to the admin person or suportive team then you shoul provide this link as embeded form so that use will click and redirect to this link.
+    admin person: https://api.whatsapp.com/send/?phone=923312154519&text=Hey%21+I+need+help..&type=phone_number&app_absent=0”
+    --- Conversation History ---
+    {conversation_history}
+    
+    User's Question: {user_question}
+
+    Your response should be concise and informative. If the question is unclear, ask for clarification.
+
+    Your answer:
+    """
+    
+    # Populate the template with dynamic data
+    conversation_history = "\n".join([f"User: {entry['user']}\nAssistant: {entry['bot']}" for entry in chat_history])
+    formatted_prompt = prompt_template.format(
+        website_content=website_text,
+        pdf_content=pdf_text,
+        conversation_history=conversation_history,
+        user_question=user_question
+    )
+
+    combined_context = f"Website Content:\n{website_text}\n\nPDF Content:\n{pdf_text}"
     messages = [{"role": "system", "content": "You are a helpful assistant. Use the provided content."}]
     for entry in chat_history:
         messages.append({"role": "user", "content": entry['user']})
         messages.append({"role": "assistant", "content": entry['bot']})
-    messages.append({"role": "user", "content": f"{pdf_text}\n\nQuestion: {user_question}"})
+    messages.append({"role": "user", "content": f"{combined_context}\n\nQuestion: {user_question}"})
 
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=messages,
+            prompt=formatted_prompt,
+            max_tokens=150,
+            temperature=0.7,
             stream=False
         )
         return response['choices'][0]['message']['content']
@@ -223,8 +254,7 @@ elif st.session_state['page'] == 'chat':
     if user_input:
         # Display bot's response
         with st.spinner("Generating response..."):
-            # bot_response = chat_with_ai(user_input, website_text, pdf_text, st.session_state['chat_history'])
-            bot_response = chat_with_ai(user_input, pdf_text, st.session_state['chat_history'])
+            bot_response = chat_with_ai(user_input, website_text, pdf_text, st.session_state['chat_history'])
         
         # Append user query and bot response to chat history
         st.session_state['chat_history'].append({"user": user_input, "bot": bot_response})
