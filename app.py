@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 import openai
 import os
 from dotenv import load_dotenv
-
+import re  # For validation
 
 # ----------------------
 # Load Environment Variables
@@ -19,17 +19,25 @@ SENDER_EMAIL = os.getenv("SENDER_EMAIL")
 SENDER_PASSWORD = os.getenv("SENDER_PASSWORD")
 RECEIVER_EMAIL = os.getenv("RECEIVER_EMAIL")
 openai.api_key = os.getenv("OPENAI_API_KEY")
-
+PDF_PATH = os.getenv("PDF_PATH")
 WEBSITE_URL = os.getenv("WEBSITE_URL")
 
 # ----------------------
-# Functions and Rest of the Script
+# Functions
 # ----------------------
 
-PDF_PATH = "./aibytec data.pdf"
+# Validate name, email, and contact number
+def is_valid_name(name):
+    return len(name.strip()) > 0
+
+def is_valid_email(email):
+    return re.match(r"[^@]+@[^@]+\.[^@]+", email)
+
+def is_valid_contact_no(contact_no):
+    return re.match(r"^\+?\d{10,15}$", contact_no)
 
 # Function to send email
-def send_email(name, email, contact_no, area_of_interest):
+def send_email(name, email, contact_no, specific_needs_and_challenges, training, mode_of_training, prefered_time_contact_mode):
     subject = "New User Profile Submission"
     body = f"""
     New Student Profile Submitted:
@@ -37,7 +45,10 @@ def send_email(name, email, contact_no, area_of_interest):
     Name: {name}
     Email: {email}
     Contact No.: {contact_no}
-    Area of Interest: {area_of_interest}
+    Task to be Performed: {specific_needs_and_challenges}
+    Preferred Course: {training}
+    Mode of Training: {mode_of_training}
+    Preferred Time/Mode of Contact: {prefered_time_contact_mode}
     """
     message = MIMEMultipart()
     message['From'] = SENDER_EMAIL
@@ -75,36 +86,46 @@ def scrape_website(url):
     except Exception as e:
         return f"Error scraping website: {e}"
 
+# Function to summarize content
+def summarize_text(text):
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "Summarize the following text for clarity and conciseness."},
+                {"role": "user", "content": text}
+            ],
+        )
+        return response['choices'][0]['message']['content']
+    except Exception as e:
+        return f"Error summarizing text: {e}"
+
 # Function to generate OpenAI response
 def chat_with_ai(user_question, website_text, pdf_text, chat_history):
-    custom_guidelines = """
-    You are a helpful assistant of a company "Aibytec". Follow these guidelines:
-    1. Always provide concise and clear answers.
-    2. If the user asks for specific instructions or a solution, give step-by-step directions.
-    3. If the user requests help with contacting someone, provide the appropriate contact link.
-    4. If you don't have enough information to answer, politely ask for clarification.
-    5. Always respect the privacy of user information and do not share personal details.
-    6. if use ask for Connect to the suportive person or admin so you have to provide admin information and also this link in hyperlink form,
-    here is direct whatsapp link
-    click here : https://api.whatsapp.com/send/?phone=923312154519&text=Hey%21+I+need+help..&type=phone_number&app_absent=0
+    summarized_pdf_text = summarize_text(pdf_text)
+    summarized_website_text = summarize_text(website_text)
+
+    combined_context = f"""
+    You are an assistant with access to two sources of information:
+    1. Website Content: {summarized_website_text}
+    2. PDF Content: {summarized_pdf_text}
+
+    Use these sources to answer the user's question accurately and concisely.
     """
-    combined_context = f"Website Content:\n{website_text}\n\nPDF Content:\n{pdf_text}"
     messages = [
-        {"role": "system", "content": custom_guidelines},
-        {"role": "system", "content": "You are a helpful assistant. Use the provided content."}]
-    for entry in chat_history:
+        {"role": "system", "content": "As an Aibytec chatbot, you are responsible for guiding the user through Aibytec’s services. Your tone should be conversational yet professional, offering easy-to-understand explanations."}
+    ]
+
+    for entry in chat_history[-5:]:
         messages.append({"role": "user", "content": entry['user']})
         messages.append({"role": "assistant", "content": entry['bot']})
+
     messages.append({"role": "user", "content": f"{combined_context}\n\nQuestion: {user_question}"})
 
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            # prompt=formatted_prompt,
-            messages=messages,
-            max_tokens=150,
-            temperature=0.7,
-            stream=False
+            model="gpt-4",
+            messages=messages
         )
         return response['choices'][0]['message']['content']
     except Exception as e:
@@ -126,64 +147,37 @@ if "chat_history" not in st.session_state:
 # PAGE 1: User Info Form
 # ----------------------
 if st.session_state['page'] == 'form':
-    st.markdown('<p style="font-size: 21px;"><b>Hi! Welcome to AIByTec</b></p>', unsafe_allow_html=True)
+    st.subheader("Complete Your Profile")
     
     with st.form(key="user_form"):
         name = st.text_input("Name")
         email = st.text_input("Email")
         contact_no = st.text_input("Contact No.")
-        area_of_interest = st.text_input("Area of Interest")
+        specific_needs_and_challenges = st.text_input("Task to be performed")
+        training = st.text_input("Preferred course")
+        mode_of_training = st.text_input("Online/Onsite")
+        prefered_time_contact_mode = st.text_input("Preferred time/mode of contact")
 
-        # Add custom CSS for alignment
-        st.markdown("""
-            <style>
-            .button-container {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-            }
-            .custom-button {
-                padding: 10px 20px;
-                background-color: #007BFF;
-                color: white;
-                border: none;
-                border-radius: 5px;
-                cursor: pointer;
-            }
-            </style>
-        """, unsafe_allow_html=True)
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            submitted = st.form_submit_button("Complete Profile to Chat!")
+        with col2:
+            continue_chat = st.form_submit_button("Chat with AIByTec Bot")
         
-        # # Use HTML to wrap buttons in the container
-        # st.markdown("""
-        #     <div class="button-container">
-        #         <button class="custom-button">Submit</button>
-        #         <button class="custom-button" style="margin-left: 10px;">Cancel</button>
-        #     </div>
-        # """, unsafe_allow_html=True)
-
-        with st.container():
-            # Create three columns for alignment
-            col1, col2, col3 = st.columns([1, 1, 1])  # Adjust proportions as needed
-            
-            # Place the button in the desired column
-            with col1:
-                submitted = st.form_submit_button("Proceed to Chat ")
-            
-            with col2:
-                continue_chat = st.form_submit_button(" Skip and Join Chat")
-            
-            with col3:
-                st.write("")  # Empty to balance alignment
-                    
         if submitted:
-            if name and email and contact_no and area_of_interest:
-                send_email(name, email, contact_no, area_of_interest)
+            if not is_valid_name(name):
+                st.warning("Please enter a valid name.")
+            elif not is_valid_email(email):
+                st.warning("Please enter a valid email address.")
+            elif not is_valid_contact_no(contact_no):
+                st.warning("Please enter a valid contact number (10-15 digits).")
+            elif not specific_needs_and_challenges or not training or not mode_of_training or not prefered_time_contact_mode:
+                st.warning("Please fill out all fields.")
+            else:
+                send_email(name, email, contact_no, specific_needs_and_challenges, training, mode_of_training, prefered_time_contact_mode)
                 st.session_state['page'] = 'chat'
                 st.rerun()
-            else:
-                st.warning("Please fill out all fields.")
         
-        # If user clicks "Continue Chat with AIByTec"
         if continue_chat:
             st.session_state['page'] = 'chat'
             st.rerun()
@@ -192,57 +186,62 @@ if st.session_state['page'] == 'form':
 # PAGE 2: Chatbot Interface
 # ----------------------
 elif st.session_state['page'] == 'chat':
-    # Display chat history without headings
+    # Initialize chat history with a greeting from the bot
+    if not st.session_state['chat_history']:
+        st.session_state['chat_history'].append({
+            "user": "", 
+            "bot": "Hello! I'm your AIByTec chatbot. How can I assist you today?"
+        })
+    
+    # Display chat history
     for entry in st.session_state['chat_history']:
-        # User Message
-        st.markdown(
-            f"""
-            <div style="
-                background-color: #78bae4; 
-                padding: 10px; 
-                border-radius: 10px; 
-                margin-bottom: 10px;
-                width: fit-content;
-                max-width: 80%;
-            ">
-                {entry['user']}
-            </div>
-            """, 
-            unsafe_allow_html=True
-        )
-
-        # Assistant Message
-        st.markdown(
-            f"""
-            <div style="
-                background-color:  #D3D3D3; 
-                padding: 10px; 
-                border-radius: 10px; 
-                margin-bottom: 10px;
-                margin-left: auto;
-                width: fit-content;
-                max-width: 80%;
-            ">
-                {entry['bot']}
-            </div>
-            """, 
-            unsafe_allow_html=True
-        )
-
+        if entry['user']:  # Show user messages
+            st.markdown(
+                f"""
+                <div style='display: flex; justify-content: flex-end; margin-bottom: 10px;'>
+                    <div style='display: flex; align-items: center; gap: 10px;'>
+                        <div style='color: #439DF6;'>👤</div>
+                        <div style='max-width: 80%; 
+                                    background-color: #439DF6; color: #fff; 
+                                    padding: 10px; border-radius: 10px;'>
+                            {entry['user']}
+                        </div>
+                    </div>
+                </div>
+                """, 
+                unsafe_allow_html=True
+            )
+        if entry['bot']:  # Show bot messages
+            st.markdown(
+                f"""
+                <div style='display: flex; justify-content: flex-start; margin-bottom: 10px;'>
+                    <div style='display: flex; align-items: center; gap: 10px;'>
+                        <div style='color: #4a4a4a;'>🤖</div>
+                        <div style='max-width: 80%; 
+                                    background-color: #4a4a4a; color: #fff; 
+                                    padding: 10px; border-radius: 10px;'>
+                            {entry['bot']}
+                        </div>
+                    </div>
+                </div>
+                """, 
+                unsafe_allow_html=True
+            )
+    
     # Load PDF and Website content once
     pdf_text = extract_pdf_text(PDF_PATH) if os.path.exists(PDF_PATH) else "PDF file not found."
     website_text = scrape_website(WEBSITE_URL)
 
     # Fixed input bar at bottom
     user_input = st.chat_input("Type your question here...", key="user_input_fixed")
-
     if user_input:
         # Display bot's response
         with st.spinner("Generating response..."):
             bot_response = chat_with_ai(user_input, website_text, pdf_text, st.session_state['chat_history'])
-        
         # Append user query and bot response to chat history
         st.session_state['chat_history'].append({"user": user_input, "bot": bot_response})
-        
         # Re-run to display updated chat history
         st.rerun()
+
+
+
