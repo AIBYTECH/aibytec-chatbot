@@ -237,7 +237,7 @@ elif st.session_state['page'] == 'chat':
     if user_input:
         # Display bot's response
         with st.spinner("Generating response..."):
-            bot_response = chat_with_ai(user_input, website_text, pdf_text, st.session_state['chat_history'])
+            bot_response = chat_with_ai(user_input,  pdf_text, st.session_state['chat_history'])
         # Append user query and bot response to chat history
         st.session_state['chat_history'].append({"user": user_input, "bot": pdf_text})
         st.session_state['chat_history'].append({"user": user_input, "bot": bot_response})
